@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Painel | Miranda Motors</title>
+<style>
+:root{--bg:#0a0a0a;--card:#171717;--line:#2a2a2a;--txt:#f5f5f5;--mut:#a3a3a3;--red:#d6141f;--red2:#ff2b36;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:grid;place-items:center;padding:20px;background:radial-gradient(circle at 80% 10%,#2a0407,#0a0a0a 55%);color:var(--txt);font:16px/1.5 'Inter',system-ui,-apple-system,'Segoe UI',Arial,sans-serif}
+.box{width:min(420px,100%);background:var(--card);border:1px solid var(--line);border-top:3px solid var(--red);border-radius:6px;padding:34px 30px}
+.box[hidden]{display:none}
+.logo{font:700 1.8rem 'Barlow Condensed','Arial Narrow',Impact,sans-serif;letter-spacing:.06em;text-transform:uppercase}.logo b{color:var(--red2)}
+h1{font:600 1.05rem system-ui,sans-serif;margin:18px 0 4px}p.s{color:var(--mut);font-size:.9rem;margin:0 0 20px}
+label{display:block;font-size:.68rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--mut);margin-bottom:14px}
+input{width:100%;margin-top:6px;padding:12px;background:#0d0d0d;color:var(--txt);border:1px solid var(--line);border-radius:3px;font:inherit}
+input:focus{outline:2px solid var(--red)}
+button.b{width:100%;padding:13px;margin-top:4px;background:var(--red);border:0;border-radius:3px;color:#fff;font:600 .82rem system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;cursor:pointer}
+button.b:hover:not(:disabled){background:var(--red2)}button.b:disabled{opacity:.5;cursor:wait}
+.l{background:none;border:0;color:var(--mut);font:inherit;font-size:.85rem;cursor:pointer;margin-top:16px;padding:0;text-decoration:underline}
+.msg{min-height:1.3em;font-size:.88rem;color:#ff6b73;margin:0 0 10px}.msg.ok{color:#5fd68a}
+.out{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:22px;padding-top:18px;border-top:1px solid var(--line);font-size:.88rem;color:var(--mut)}
+body.pn{place-items:start center}.wide{width:min(1100px,100%)}
+.top{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:22px}
+#tabs{display:flex;gap:4px;flex:1}#tabs button{background:none;border:0;border-bottom:2px solid transparent;color:var(--mut);font:600 .8rem system-ui,sans-serif;letter-spacing:.1em;text-transform:uppercase;padding:9px 14px;cursor:pointer}#tabs button.on{color:#fff;border-color:var(--red)}
+.who{color:var(--mut);font-size:.85rem}
+#st{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}#st div{background:#0d0d0d;border:1px solid var(--line);padding:20px;border-radius:4px}#st b{display:block;font:700 2.4rem/1 'Barlow Condensed',Impact,sans-serif}#st span{color:var(--mut);font-size:.82rem}
+.vr{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}.im{width:84px;height:60px;background:#0d0d0d;border-radius:3px;overflow:hidden}.im img{width:100%;height:100%;object-fit:cover}
+.in{flex:1;min-width:180px}.in small{display:block;color:var(--mut)}.vr .l,.pt .l{margin:0}.vr select{width:auto;margin:0}
+.add{width:auto!important;padding:12px 22px!important;margin-bottom:14px}
+.lr{padding:14px 0;border-bottom:1px solid var(--line)}.lr a{color:var(--red2)}.lr p{margin:6px 0 0;color:#cfcfcf}
+dialog{width:min(720px,94vw);max-height:92vh;overflow:auto;background:var(--card);color:var(--txt);border:1px solid var(--line);border-top:3px solid var(--red);border-radius:6px;padding:26px}dialog::backdrop{background:#000b}
+.g{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:0 14px}
+select,textarea{width:100%;margin-top:6px;padding:12px;background:#0d0d0d;color:var(--txt);border:1px solid var(--line);border-radius:3px;font:inherit}
+input[type=checkbox]{width:auto;margin:0 8px 0 0}.row{display:flex;justify-content:space-between;align-items:center}
+.pt{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line);font-size:.8rem}.pt img{width:72px;height:52px;object-fit:cover;border-radius:3px}.pt span{color:var(--red2);font-weight:600;min-width:62px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<main class="box" id="v-login" hidden>
+ <div class="logo">Miranda <b>Motors</b></div>
+ <h1>Área administrativa</h1><p class="s">Acesso restrito à equipe autorizada.</p>
+ <form id="f-login" novalidate>
+  <label>E-mail<input name="email" type="email" autocomplete="username" required></label>
+  <label>Senha<input name="password" type="password" autocomplete="current-password" required></label>
+  <p class="msg" id="m-login" role="alert"></p>
+  <button class="b" type="submit">Entrar</button>
+ </form>
+ <button class="l" data-go="forgot">Esqueci minha senha</button>
+</main>
+
+<!-- RECUPERAR SENHA -->
+<main class="box" id="v-forgot" hidden>
+ <div class="logo">Miranda <b>Motors</b></div>
+ <h1>Recuperar senha</h1><p class="s">Enviaremos um link de redefinição para o seu e-mail.</p>
+ <form id="f-forgot" novalidate>
+  <label>E-mail<input name="email" type="email" autocomplete="username" required></label>
+  <p class="msg" id="m-forgot" role="status"></p>
+  <button class="b" type="submit">Enviar link</button>
+ </form>
+ <button class="l" data-go="login">Voltar ao login</button>
+</main>
+
+<!-- NOVA SENHA (abre pelo link do e-mail) -->
+<main class="box" id="v-reset" hidden>
+ <div class="logo">Miranda <b>Motors</b></div>
+ <h1>Criar nova senha</h1><p class="s">Use pelo menos 8 caracteres.</p>
+ <form id="f-reset" novalidate>
+  <label>Nova senha<input name="p1" type="password" autocomplete="new-password" required></label>
+  <label>Repita a nova senha<input name="p2" type="password" autocomplete="new-password" required></label>
+  <p class="msg" id="m-reset" role="alert"></p>
+  <button class="b" type="submit">Salvar senha</button>
+ </form>
+</main>
+
+<!-- ÁREA PROTEGIDA -->
+<main class="box wide" id="v-panel" hidden>
+ <div class="top"><div class="logo">Miranda <b>Motors</b></div>
+  <nav id="tabs"><button data-t="dash" class="on">Painel</button><button data-t="veic">Veículos</button><button data-t="leads">Leads</button></nav>
+  <span class="who" id="who"></span><button class="l" id="logout" style="margin:0">Sair</button></div>
+ <section id="t-dash"><div id="st"></div></section>
+ <section id="t-veic" hidden><button class="b add" id="add">+ Adicionar veículo</button><div id="vl"></div></section>
+ <section id="t-leads" hidden><div id="ll"></div></section>
+</main>
+<dialog id="ed"><form id="f-ed">
+ <h1 id="ed-t">Veículo</h1>
+ <div class="g">
+  <label>Tipo<select name="tipo"><option value="carro">Carro</option><option value="moto">Moto</option></select></label>
+  <label>Marca<input name="marca" required></label><label>Modelo<input name="modelo" required></label><label>Versão<input name="versao"></label>
+  <label>Ano<input name="ano" type="number" min="1950" max="2100" required></label><label>Quilometragem<input name="km" type="number" min="0" required></label>
+  <label>Preço (R$)<input name="preco" type="number" min="0" step="0.01" required></label>
+  <label>Câmbio<select name="cambio"><option>Manual</option><option>Automático</option><option>Automatizado</option><option>CVT</option></select></label>
+  <label>Combustível<select name="combustivel"><option>Flex</option><option>Gasolina</option><option>Etanol</option><option>Diesel</option><option>Elétrico</option><option>Híbrido</option></select></label>
+  <label>Cor<input name="cor"></label>
+  <label>Status<select name="status"><option value="disponivel">Disponível</option><option value="reservado">Reservado</option><option value="vendido">Vendido</option><option value="oculto">Oculto (não aparece no site)</option></select></label>
+  <label><input type="checkbox" name="destaque"> Veículo em destaque</label>
+ </div>
+ <label>Descrição<textarea name="descricao" rows="3"></textarea></label>
+ <label>Opcionais (um por linha)<textarea name="opcionais" rows="3"></textarea></label>
+ <div id="ph"></div>
+ <label>Adicionar fotos (várias de uma vez)<input name="fotos" type="file" accept="image/*" multiple></label>
+ <p class="msg" id="m-ed" role="status"></p>
+ <div class="row"><button type="button" class="l" id="cancel" style="margin:0">Cancelar</button><button class="b" type="submit" style="width:auto;padding:13px 30px">Salvar</button></div>
+</form></dialog>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+/* ===== CONFIGURAÇÃO — Supabase > Settings > API Keys =====
+   Use SOMENTE a URL e a chave publicável (sb_publishable_...). Chaves antigas "anon" também funcionam. NUNCA coloque a chave secreta ("sb_secret_..." ou "service_role") aqui. */
+const SUPABASE_URL = "COLE_AQUI_A_URL_DO_PROJETO";
+const SUPABASE_PUBLISHABLE_KEY = "COLE_AQUI_A_CHAVE_PUBLICAVEL";
+
+const $ = s => document.querySelector(s);
+const show = v => ["login","forgot","reset","panel"].forEach(x => $("#v-"+x).hidden = x !== v); document.body.className = v === "panel" ? "pn" : "";
+const msg = (id, t, ok) => { const e = $(id); e.textContent = t || ""; e.className = "msg" + (ok ? " ok" : ""); };
+document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => { show(b.dataset.go); });
+
+if (SUPABASE_URL.startsWith("COLE_")) {
+  show("login"); msg("#m-login", "Configure SUPABASE_URL e SUPABASE_PUBLISHABLE_KEY no início do arquivo.");
+  $("#f-login button").disabled = true;
+} else {
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+  const recovering = /type=recovery/.test(location.hash);
+
+  // Só entra quem tem registro na tabela "profiles" (a segurança real está nas regras RLS do banco).
+  async function enter(user) {
+    const { data, error } = await sb.from("profiles").select("nome, role").eq("id", user.id).maybeSingle();
+    if (error || !data) { await sb.auth.signOut(); show("login"); msg("#m-login", "Este usuário não tem acesso ao painel."); return; }
+    $("#who").textContent = (data.nome || user.email) + " · " + data.role;
+    show("panel"); loadPanel();
+  }
+
+  sb.auth.onAuthStateChange(ev => {            // sem await de chamadas ao Supabase aqui dentro
+    if (ev === "PASSWORD_RECOVERY") show("reset");
+    if (ev === "SIGNED_OUT") show("login");
+  });
+
+  if (recovering) show("reset");
+  else sb.auth.getSession().then(({ data }) => data.session ? enter(data.session.user) : show("login"));
+
+  $("#f-login").onsubmit = async e => {
+    e.preventDefault(); const btn = e.target.querySelector("button"); btn.disabled = true; msg("#m-login", "");
+    const { data, error } = await sb.auth.signInWithPassword({ email: e.target.email.value.trim(), password: e.target.password.value });
+    btn.disabled = false;
+    if (error) return msg("#m-login", "E-mail ou senha incorretos.");   // mensagem genérica de propósito
+    e.target.password.value = ""; enter(data.user);
+  };
+
+  $("#f-forgot").onsubmit = async e => {
+    e.preventDefault(); const btn = e.target.querySelector("button"); btn.disabled = true;
+    await sb.auth.resetPasswordForEmail(e.target.email.value.trim(), { redirectTo: location.origin + location.pathname });
+    btn.disabled = false;
+    msg("#m-forgot", "Se o e-mail estiver cadastrado, você receberá um link para redefinir a senha.", true);
+  };
+
+  $("#f-reset").onsubmit = async e => {
+    e.preventDefault(); const { p1, p2 } = e.target;
+    if (p1.value.length < 8) return msg("#m-reset", "A senha precisa ter pelo menos 8 caracteres.");
+    if (p1.value !== p2.value) return msg("#m-reset", "As senhas não são iguais.");
+    const btn = e.target.querySelector("button"); btn.disabled = true;
+    const { data, error } = await sb.auth.updateUser({ password: p1.value });
+    btn.disabled = false;
+    if (error) return msg("#m-reset", "Não foi possível salvar. Peça um novo link de recuperação.");
+    history.replaceState(null, "", location.pathname); p1.value = p2.value = ""; enter(data.user);
+  };
+
+  /* ===== PAINEL ===== */
+  let VS = [], LS = [], cur = null;
+  const dlg = $("#ed"), fe = $("#f-ed");
+  const URLP = p => `${SUPABASE_URL}/storage/v1/object/public/vehicles/${p}`;
+  const brl = n => Number(n).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const slug = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const ST = { disponivel: "Disponível", reservado: "Reservado", vendido: "Vendido", oculto: "Oculto" };
+  const sorted = v => [...(v.vehicle_photos || [])].sort((a, b) => b.principal - a.principal || a.ordem - b.ordem);
+  const shrink = f => new Promise((ok, no) => { const i = new Image(); i.onload = () => { const k = Math.min(1, 1600 / Math.max(i.width, i.height)), c = document.createElement("canvas"); c.width = i.width * k; c.height = i.height * k; c.getContext("2d").drawImage(i, 0, 0, c.width, c.height); c.toBlob(b => b ? ok(b) : no(), "image/jpeg", .82); }; i.onerror = no; i.src = URL.createObjectURL(f); });
+
+  async function loadPanel() {
+    const [v, l] = await Promise.all([
+      sb.from("vehicles").select("*, vehicle_photos(id, path, principal, ordem)").order("created_at", { ascending: false }),
+      sb.from("leads").select("*, vehicles(marca, modelo, ano)").order("created_at", { ascending: false })]);
+    VS = v.data || []; LS = l.data || [];
+    const c = k => VS.filter(x => x.status == k).length;
+    $("#st").innerHTML = [["Total de veículos", VS.length], ["Disponíveis", c("disponivel")], ["Vendidos", c("vendido")], ["Em destaque", VS.filter(x => x.destaque).length], ["Leads recebidos", LS.length]].map(([a, b]) => `<div><b>${b}</b><span>${a}</span></div>`).join("");
+    $("#vl").innerHTML = VS.length ? VS.map(v => { const p = sorted(v)[0]; return `<div class="vr" data-id="${v.id}"><div class="im">${p ? `<img src="${URLP(p.path)}" alt="">` : ""}</div><div class="in"><b>${esc(v.marca)} ${esc(v.modelo)}</b><small>${esc(v.versao || "")} · ${v.ano} · ${Number(v.km).toLocaleString("pt-BR")} km · ${brl(v.preco)}</small></div><select class="stt" aria-label="Status">${Object.entries(ST).map(([k, t]) => `<option value="${k}"${k == v.status ? " selected" : ""}>${t}</option>`).join("")}</select><button class="l dst">${v.destaque ? "★ Destaque" : "☆ Destacar"}</button><button class="l ed">Editar</button><button class="l del">Excluir</button></div>`; }).join("") : '<p class="s">Nenhum veículo cadastrado. Clique em “+ Adicionar veículo”.</p>';
+    $("#ll").innerHTML = LS.length ? LS.map(l => `<div class="lr"><b>${esc(l.nome)}</b> <small>${new Date(l.created_at).toLocaleString("pt-BR")}</small><br><a href="https://wa.me/55${l.telefone.replace(/\D/g, "")}" target="_blank" rel="noopener">${esc(l.telefone)}</a>${l.email ? " · " + esc(l.email) : ""}${l.vehicles ? `<br>Interesse: ${esc(l.vehicles.marca + " " + l.vehicles.modelo + " " + (l.vehicles.ano || ""))}` : ""}${l.mensagem ? `<p>${esc(l.mensagem)}</p>` : ""}</div>`).join("") : '<p class="s">Nenhum lead recebido ainda.</p>';
+  }
+
+  $("#tabs").onclick = e => { const t = e.target.dataset.t; if (!t) return; document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.t == t)); ["dash", "veic", "leads"].forEach(x => $("#t-" + x).hidden = x != t); };
+  $("#add").onclick = () => openEd(null); $("#cancel").onclick = () => dlg.close();
+
+  $("#vl").onchange = async e => {      // trocar o status (ex.: Vendido) atualiza o site na hora
+    if (!e.target.classList.contains("stt")) return;
+    const { error } = await sb.from("vehicles").update({ status: e.target.value }).eq("id", e.target.closest(".vr").dataset.id);
+    if (error) alert("Não foi possível alterar o status."); loadPanel();
+  };
+  $("#vl").onclick = async e => {
+    const r = e.target.closest(".vr"), t = e.target.classList; if (!r) return; const v = VS.find(x => x.id == r.dataset.id);
+    if (t.contains("dst")) { await sb.from("vehicles").update({ destaque: !v.destaque }).eq("id", v.id); loadPanel(); }
+    if (t.contains("ed")) openEd(v);
+    if (t.contains("del") && confirm(`Excluir ${v.marca} ${v.modelo} definitivamente? Para apenas tirar do site, use o status "Oculto".`)) {
+      await sb.storage.from("vehicles").remove((v.vehicle_photos || []).map(p => p.path));
+      await sb.from("vehicles").delete().eq("id", v.id); loadPanel();
+    }
+  };
+
+  function openEd(v) {
+    cur = v || null; fe.reset(); msg("#m-ed", ""); $("#ed-t").textContent = v ? "Editar veículo" : "Adicionar veículo";
+    if (v) { for (const k of ["tipo", "marca", "modelo", "versao", "ano", "km", "preco", "cambio", "combustivel", "cor", "descricao", "status"]) fe[k].value = v[k] ?? ""; fe.destaque.checked = v.destaque; fe.opcionais.value = (v.opcionais || []).join("\n"); }
+    drawPh(); dlg.showModal();
+  }
+  function drawPh() {
+    $("#ph").innerHTML = (cur ? sorted(cur) : []).map((p, i) => `<div class="pt" data-id="${p.id}"><img src="${URLP(p.path)}" alt=""><span>${i ? "" : "Principal"}</span><button type="button" class="l" data-a="main">Tornar principal</button><button type="button" class="l" data-a="up">◀</button><button type="button" class="l" data-a="dn">▶</button><button type="button" class="l" data-a="rm">Excluir</button></div>`).join("");
+  }
+  $("#ph").onclick = async e => {            // a 1ª foto da lista é sempre a principal
+    const a = e.target.dataset.a, d = e.target.closest(".pt"); if (!a) return;
+    const L = sorted(cur), i = L.findIndex(p => p.id == d.dataset.id);
+    if (a == "rm") { if (!confirm("Excluir esta foto?")) return; await sb.storage.from("vehicles").remove([L[i].path]); await sb.from("vehicle_photos").delete().eq("id", L[i].id); L.splice(i, 1); }
+    if (a == "main" && i > 0) L.unshift(L.splice(i, 1)[0]);
+    if (a == "up" && i > 0) [L[i - 1], L[i]] = [L[i], L[i - 1]];
+    if (a == "dn" && i < L.length - 1) [L[i + 1], L[i]] = [L[i], L[i + 1]];
+    await sb.from("vehicle_photos").update({ principal: false }).eq("vehicle_id", cur.id);
+    for (let k = 0; k < L.length; k++) await sb.from("vehicle_photos").update({ ordem: k }).eq("id", L[k].id);
+    if (L[0]) await sb.from("vehicle_photos").update({ principal: true }).eq("id", L[0].id);
+    cur.vehicle_photos = L.map((p, k) => ({ ...p, ordem: k, principal: k == 0 })); drawPh(); loadPanel();
+  };
+
+  fe.onsubmit = async e => {
+    e.preventDefault(); const f = fe, b = f.querySelector(".b"); b.disabled = true; msg("#m-ed", "Salvando...", 1);
+    const row = { tipo: f.tipo.value, marca: f.marca.value.trim(), modelo: f.modelo.value.trim(), versao: f.versao.value.trim() || null, ano: +f.ano.value, km: +f.km.value, preco: +f.preco.value, cambio: f.cambio.value, combustivel: f.combustivel.value, cor: f.cor.value.trim() || null, descricao: f.descricao.value.trim() || null, opcionais: f.opcionais.value.split("\n").map(x => x.trim()).filter(Boolean), destaque: f.destaque.checked, status: f.status.value };
+    let id = cur?.id, err;
+    if (cur) ({ error: err } = await sb.from("vehicles").update(row).eq("id", id));
+    else {
+      const base = slug([row.marca, row.modelo, row.versao, row.ano].filter(Boolean).join(" "));
+      for (const sl of [base, base + "-" + Math.random().toString(36).slice(2, 6)]) {   // URL limpa; se já existir, acrescenta um sufixo
+        const r = await sb.from("vehicles").insert({ ...row, slug: sl }).select("id").single(); err = r.error;
+        if (!err) { id = r.data.id; break; } if (err.code != "23505") break;
+      }
+    }
+    if (err) { b.disabled = false; return msg("#m-ed", "Não foi possível salvar. Confira os campos."); }
+    let n = sorted(cur || {}).length;
+    for (const file of [...f.fotos.files]) {
+      try {
+        const path = `${id}/${crypto.randomUUID()}.jpg`, up = await sb.storage.from("vehicles").upload(path, await shrink(file), { contentType: "image/jpeg" });
+        if (up.error) throw up.error; await sb.from("vehicle_photos").insert({ vehicle_id: id, path, ordem: n, principal: n == 0 }); n++;
+      } catch { alert("O veículo foi salvo, mas uma das fotos não foi enviada."); }
+    }
+    b.disabled = false; dlg.close(); loadPanel();
+  };
+
+  $("#logout").onclick = async () => { await sb.auth.signOut(); show("login"); };
+}
+</script>
+</body>
+</html>
