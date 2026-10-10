@@ -40,7 +40,7 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0}.row{display:flex;justify-conte
 <body>
 
 <!-- LOGIN -->
-<main class="box" id="v-login" hidden>
+<main class="box" id="v-login">
  <div class="logo">Miranda <b>Motors</b></div>
  <h1>Área administrativa</h1><p class="s">Acesso restrito à equipe autorizada.</p>
  <form id="f-login" novalidate>
@@ -106,30 +106,36 @@ input[type=checkbox]{width:auto;margin:0 8px 0 0}.row{display:flex;justify-conte
  <div class="row"><button type="button" class="l" id="cancel" style="margin:0">Cancelar</button><button class="b" type="submit" style="width:auto;padding:13px 30px">Salvar</button></div>
 </form></dialog>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js" onerror="var s=document.createElement('script');s.src='https://unpkg.com/@supabase/supabase-js@2.45.4/dist/umd/supabase.js';s.onload=function(){start()};document.head.appendChild(s)"></script>
 <script>
 /* ===== CONFIGURAÇÃO — Supabase > Settings > API Keys =====
    Use SOMENTE a URL e a chave publicável (sb_publishable_...). Chaves antigas "anon" também funcionam. NUNCA coloque a chave secreta ("sb_secret_..." ou "service_role") aqui. */
-const SUPABASE_URL = "COLE_AQUI_A_URL_DO_PROJETO";
-const SUPABASE_PUBLISHABLE_KEY = "COLE_AQUI_A_CHAVE_PUBLICAVEL";
+const SUPABASE_URL = "https://wyqjmnxwcenlwgfxuhfp.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_N85DbEGyCKdGZ-rHxzLFIQ_NEj__Pm0";
 
 const $ = s => document.querySelector(s);
 const show = v => ["login","forgot","reset","panel"].forEach(x => $("#v-"+x).hidden = x !== v); document.body.className = v === "panel" ? "pn" : "";
 const msg = (id, t, ok) => { const e = $(id); e.textContent = t || ""; e.className = "msg" + (ok ? " ok" : ""); };
 document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => { show(b.dataset.go); });
+const fail = m => { if ([...document.querySelectorAll("main")].every(x => x.hidden)) show("login"); msg("#m-login", "Erro: " + m); };
+addEventListener("error", e => fail(e.message)); addEventListener("unhandledrejection", e => fail((e.reason && e.reason.message) || e.reason));
 
 if (SUPABASE_URL.startsWith("COLE_")) {
   show("login"); msg("#m-login", "Configure SUPABASE_URL e SUPABASE_PUBLISHABLE_KEY no início do arquivo.");
   $("#f-login button").disabled = true;
-} else {
+} else start();
+
+function start() {
+  if (!window.supabase) { show("login"); msg("#m-login", "Não foi possível carregar o sistema de login. Verifique a internet, desative bloqueadores de anúncios e recarregue a página."); $("#f-login button").disabled = true; return; }
+  $("#f-login button").disabled = false; msg("#m-login", "");
   const sb = supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
   const recovering = /type=recovery/.test(location.hash);
 
   // Só entra quem tem registro na tabela "profiles" (a segurança real está nas regras RLS do banco).
   async function enter(user) {
-    const { data, error } = await sb.from("profiles").select("nome, role").eq("id", user.id).maybeSingle();
-    if (error || !data) { await sb.auth.signOut(); show("login"); msg("#m-login", "Este usuário não tem acesso ao painel."); return; }
-    $("#who").textContent = (data.nome || user.email) + " · " + data.role;
+    const { data, error } = await sb.from("users").select("full_name, role, active").eq("id", user.id).maybeSingle();
+    if (error || !data || !data.active) { await sb.auth.signOut(); show("login"); msg("#m-login", "Este usuário não tem acesso ao painel."); return; }
+    $("#who").textContent = (data.full_name || user.email) + " · " + (data.role == "admin" ? "Administrador" : "Vendedor"); ROLE = data.role;
     show("panel"); loadPanel();
   }
 
@@ -168,7 +174,7 @@ if (SUPABASE_URL.startsWith("COLE_")) {
   };
 
   /* ===== PAINEL ===== */
-  let VS = [], LS = [], cur = null;
+  let VS = [], LS = [], cur = null, ROLE = "";
   const dlg = $("#ed"), fe = $("#f-ed");
   const URLP = p => `${SUPABASE_URL}/storage/v1/object/public/vehicles/${p}`;
   const brl = n => Number(n).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -178,11 +184,14 @@ if (SUPABASE_URL.startsWith("COLE_")) {
   const sorted = v => [...(v.vehicle_photos || [])].sort((a, b) => b.principal - a.principal || a.ordem - b.ordem);
   const shrink = f => new Promise((ok, no) => { const i = new Image(); i.onload = () => { const k = Math.min(1, 1600 / Math.max(i.width, i.height)), c = document.createElement("canvas"); c.width = i.width * k; c.height = i.height * k; c.getContext("2d").drawImage(i, 0, 0, c.width, c.height); c.toBlob(b => b ? ok(b) : no(), "image/jpeg", .82); }; i.onerror = no; i.src = URL.createObjectURL(f); });
 
+  const TP = { car: "carro", motorcycle: "moto" }, TPR = { carro: "car", moto: "motorcycle" };
+  const SP = { available: "disponivel", reserved: "reservado", sold: "vendido", hidden: "oculto" }, SPR = Object.fromEntries(Object.entries(SP).map(([a, b]) => [b, a]));
+  const fromDb = v => ({ ...v, tipo: TP[v.type], marca: v.brand, modelo: v.model, versao: v.version, ano: v.year, km: v.mileage ?? 0, preco: v.price ?? 0, cambio: v.transmission, combustivel: v.fuel, cor: v.color, descricao: v.description, destaque: v.featured, status: SP[v.status], opcionais: (v.vehicle_features || []).map(f => f.name), vehicle_photos: (v.vehicle_images || []).map(p => ({ id: p.id, path: p.path, principal: p.is_cover, ordem: p.position })) });
   async function loadPanel() {
     const [v, l] = await Promise.all([
-      sb.from("vehicles").select("*, vehicle_photos(id, path, principal, ordem)").order("created_at", { ascending: false }),
-      sb.from("leads").select("*, vehicles(marca, modelo, ano)").order("created_at", { ascending: false })]);
-    VS = v.data || []; LS = l.data || [];
+      sb.from("vehicles").select("*, vehicle_images(id, path, position, is_cover), vehicle_features(id, name)").order("created_at", { ascending: false }),
+      sb.from("leads").select("*, vehicles(brand, model, year)").order("created_at", { ascending: false })]);
+    VS = (v.data || []).map(fromDb); LS = (l.data || []).map(x => ({ ...x, nome: x.name, telefone: x.phone, mensagem: x.message, vehicles: x.vehicles && { marca: x.vehicles.brand, modelo: x.vehicles.model, ano: x.vehicles.year } }));
     const c = k => VS.filter(x => x.status == k).length;
     $("#st").innerHTML = [["Total de veículos", VS.length], ["Disponíveis", c("disponivel")], ["Vendidos", c("vendido")], ["Em destaque", VS.filter(x => x.destaque).length], ["Leads recebidos", LS.length]].map(([a, b]) => `<div><b>${b}</b><span>${a}</span></div>`).join("");
     $("#vl").innerHTML = VS.length ? VS.map(v => { const p = sorted(v)[0]; return `<div class="vr" data-id="${v.id}"><div class="im">${p ? `<img src="${URLP(p.path)}" alt="">` : ""}</div><div class="in"><b>${esc(v.marca)} ${esc(v.modelo)}</b><small>${esc(v.versao || "")} · ${v.ano} · ${Number(v.km).toLocaleString("pt-BR")} km · ${brl(v.preco)}</small></div><select class="stt" aria-label="Status">${Object.entries(ST).map(([k, t]) => `<option value="${k}"${k == v.status ? " selected" : ""}>${t}</option>`).join("")}</select><button class="l dst">${v.destaque ? "★ Destaque" : "☆ Destacar"}</button><button class="l ed">Editar</button><button class="l del">Excluir</button></div>`; }).join("") : '<p class="s">Nenhum veículo cadastrado. Clique em “+ Adicionar veículo”.</p>';
@@ -194,16 +203,20 @@ if (SUPABASE_URL.startsWith("COLE_")) {
 
   $("#vl").onchange = async e => {      // trocar o status (ex.: Vendido) atualiza o site na hora
     if (!e.target.classList.contains("stt")) return;
-    const { error } = await sb.from("vehicles").update({ status: e.target.value }).eq("id", e.target.closest(".vr").dataset.id);
+    const { error } = await sb.from("vehicles").update({ status: SPR[e.target.value] }).eq("id", e.target.closest(".vr").dataset.id);
     if (error) alert("Não foi possível alterar o status."); loadPanel();
   };
   $("#vl").onclick = async e => {
     const r = e.target.closest(".vr"), t = e.target.classList; if (!r) return; const v = VS.find(x => x.id == r.dataset.id);
-    if (t.contains("dst")) { await sb.from("vehicles").update({ destaque: !v.destaque }).eq("id", v.id); loadPanel(); }
+    if (t.contains("dst")) { await sb.from("vehicles").update({ featured: !v.destaque }).eq("id", v.id); loadPanel(); }
     if (t.contains("ed")) openEd(v);
     if (t.contains("del") && confirm(`Excluir ${v.marca} ${v.modelo} definitivamente? Para apenas tirar do site, use o status "Oculto".`)) {
+      if (ROLE != "admin") return alert('Somente o administrador pode excluir veículos. Para tirar do site, use o status "Oculto".');
+      const { count } = await sb.from("leads").select("id", { count: "exact", head: true }).eq("vehicle_id", v.id);
+      if (count) return alert('Este veículo tem contatos (leads) vinculados e não pode ser excluído. Use o status "Oculto".');
+      await sb.from("vehicle_features").delete().eq("vehicle_id", v.id); await sb.from("vehicle_images").delete().eq("vehicle_id", v.id);
       await sb.storage.from("vehicles").remove((v.vehicle_photos || []).map(p => p.path));
-      await sb.from("vehicles").delete().eq("id", v.id); loadPanel();
+      const { error } = await sb.from("vehicles").delete().eq("id", v.id); if (error) alert("Não foi possível excluir."); loadPanel();
     }
   };
 
@@ -218,34 +231,37 @@ if (SUPABASE_URL.startsWith("COLE_")) {
   $("#ph").onclick = async e => {            // a 1ª foto da lista é sempre a principal
     const a = e.target.dataset.a, d = e.target.closest(".pt"); if (!a) return;
     const L = sorted(cur), i = L.findIndex(p => p.id == d.dataset.id);
-    if (a == "rm") { if (!confirm("Excluir esta foto?")) return; await sb.storage.from("vehicles").remove([L[i].path]); await sb.from("vehicle_photos").delete().eq("id", L[i].id); L.splice(i, 1); }
+    if (a == "rm") { if (!confirm("Excluir esta foto?")) return; await sb.storage.from("vehicles").remove([L[i].path]); await sb.from("vehicle_images").delete().eq("id", L[i].id); L.splice(i, 1); }
     if (a == "main" && i > 0) L.unshift(L.splice(i, 1)[0]);
     if (a == "up" && i > 0) [L[i - 1], L[i]] = [L[i], L[i - 1]];
     if (a == "dn" && i < L.length - 1) [L[i + 1], L[i]] = [L[i], L[i + 1]];
-    await sb.from("vehicle_photos").update({ principal: false }).eq("vehicle_id", cur.id);
-    for (let k = 0; k < L.length; k++) await sb.from("vehicle_photos").update({ ordem: k }).eq("id", L[k].id);
-    if (L[0]) await sb.from("vehicle_photos").update({ principal: true }).eq("id", L[0].id);
+    await sb.from("vehicle_images").update({ is_cover: false }).eq("vehicle_id", cur.id);
+    for (let k = 0; k < L.length; k++) await sb.from("vehicle_images").update({ position: k }).eq("id", L[k].id);
+    if (L[0]) await sb.from("vehicle_images").update({ is_cover: true }).eq("id", L[0].id);
     cur.vehicle_photos = L.map((p, k) => ({ ...p, ordem: k, principal: k == 0 })); drawPh(); loadPanel();
   };
 
   fe.onsubmit = async e => {
     e.preventDefault(); const f = fe, b = f.querySelector(".b"); b.disabled = true; msg("#m-ed", "Salvando...", 1);
-    const row = { tipo: f.tipo.value, marca: f.marca.value.trim(), modelo: f.modelo.value.trim(), versao: f.versao.value.trim() || null, ano: +f.ano.value, km: +f.km.value, preco: +f.preco.value, cambio: f.cambio.value, combustivel: f.combustivel.value, cor: f.cor.value.trim() || null, descricao: f.descricao.value.trim() || null, opcionais: f.opcionais.value.split("\n").map(x => x.trim()).filter(Boolean), destaque: f.destaque.checked, status: f.status.value };
+    const ops = f.opcionais.value.split("\n").map(x => x.trim()).filter(Boolean);
+    const row = { type: TPR[f.tipo.value], brand: f.marca.value.trim(), model: f.modelo.value.trim(), version: f.versao.value.trim() || null, year: +f.ano.value, mileage: +f.km.value, price: +f.preco.value, transmission: f.cambio.value, fuel: f.combustivel.value, color: f.cor.value.trim() || null, description: f.descricao.value.trim() || null, featured: f.destaque.checked, status: SPR[f.status.value] };
     let id = cur?.id, err;
     if (cur) ({ error: err } = await sb.from("vehicles").update(row).eq("id", id));
     else {
-      const base = slug([row.marca, row.modelo, row.versao, row.ano].filter(Boolean).join(" "));
+      const base = slug([row.brand, row.model, row.version, row.year].filter(Boolean).join(" "));
       for (const sl of [base, base + "-" + Math.random().toString(36).slice(2, 6)]) {   // URL limpa; se já existir, acrescenta um sufixo
         const r = await sb.from("vehicles").insert({ ...row, slug: sl }).select("id").single(); err = r.error;
         if (!err) { id = r.data.id; break; } if (err.code != "23505") break;
       }
     }
     if (err) { b.disabled = false; return msg("#m-ed", "Não foi possível salvar. Confira os campos."); }
+    await sb.from("vehicle_features").delete().eq("vehicle_id", id);
+    if (ops.length) await sb.from("vehicle_features").insert(ops.map(name => ({ vehicle_id: id, name })));
     let n = sorted(cur || {}).length;
     for (const file of [...f.fotos.files]) {
       try {
         const path = `${id}/${crypto.randomUUID()}.jpg`, up = await sb.storage.from("vehicles").upload(path, await shrink(file), { contentType: "image/jpeg" });
-        if (up.error) throw up.error; await sb.from("vehicle_photos").insert({ vehicle_id: id, path, ordem: n, principal: n == 0 }); n++;
+        if (up.error) throw up.error; await sb.from("vehicle_images").insert({ vehicle_id: id, path, position: n, is_cover: n == 0 }); n++;
       } catch { alert("O veículo foi salvo, mas uma das fotos não foi enviada."); }
     }
     b.disabled = false; dlg.close(); loadPanel();
